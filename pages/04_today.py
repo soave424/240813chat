@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 import os
 
 # API KEY 정보로드
-# load_dotenv()
+#load_dotenv()
 
 # 캐시 디렉토리 생성
 if not os.path.exists(".cache"):
@@ -29,7 +29,7 @@ if not os.path.exists(".cache/files"):
 if not os.path.exists(".cache/embeddings"):
     os.mkdir(".cache/embeddings")
 
-st.title("특별한 오늘😃")
+st.title("대화내용을 기억하는 챗봇 💬")
 
 # 처음 1번만 실행하기 위한 코드
 if "messages" not in st.session_state:
@@ -38,6 +38,7 @@ if "messages" not in st.session_state:
 
 if "store" not in st.session_state:
     st.session_state["store"] = {}
+
 
 # 사이드바 생성
 with st.sidebar:
@@ -53,12 +54,12 @@ with st.sidebar:
     # 날짜 선택 메뉴
     selected_date = st.date_input("날짜를 선택하세요", today)
 
-    # GPT에 선택한 날짜가 어떤 날인지 물어보기
-    if st.button("날짜 확인"):
+    # 날짜에 대한 기념일 정보를 확인
+    if st.button("기념일 확인"):
         date_str = selected_date.strftime("%Y-%m-%d")
-        question = f"{date_str}는 어떤 특별한 날인가요?"
+        question = f"{date_str}는 어떤 기념일인가요?"
 
-        # GPT-4 모델을 사용하여 답변을 생성합니다.
+        # GPT 모델을 사용하여 답변을 생성합니다.
         chain = st.session_state.get("multiturn_chain")
         if chain is None:
             chain = create_chain(model_name=selected_model)
@@ -72,14 +73,17 @@ with st.sidebar:
         except Exception as e:
             st.error(f"알 수 없는 오류가 발생했습니다: {str(e)}")
 
+
 # 이전 대화를 출력
 def print_messages():
     for chat_message in st.session_state["messages"]:
         st.chat_message(chat_message.role).write(chat_message.content)
 
+
 # 새로운 메시지를 추가
 def add_message(role, message):
     st.session_state["messages"].append(ChatMessage(role=role, content=message))
+
 
 # 세션 ID를 기반으로 세션 기록을 가져오는 함수
 def get_session_history(session_ids):
@@ -87,6 +91,7 @@ def get_session_history(session_ids):
         # 새로운 ChatMessageHistory 객체를 생성하여 store에 저장
         st.session_state["store"][session_ids] = ChatMessageHistory()
     return st.session_state["store"][session_ids]  # 해당 세션 ID에 대한 세션 기록 반환
+
 
 # 체인 생성
 def create_chain(model_name="gpt-4o"):
@@ -105,7 +110,7 @@ def create_chain(model_name="gpt-4o"):
     )
 
     # llm 생성
-    llm = ChatOpenAI(model_name=model_name, openai_api_key=st.session_state.get("api_key", ""))
+    llm = ChatOpenAI(model_name="gpt-4o", openai_api_key=st.session_state.api_key)
 
     # 일반 Chain 생성
     chain = prompt | llm | StrOutputParser()
@@ -117,6 +122,7 @@ def create_chain(model_name="gpt-4o"):
         history_messages_key="chat_history",  # 기록 메시지의 키
     )
     return chain_with_history
+
 
 # 초기화 버튼이 눌리면...
 if clear_btn:
@@ -134,37 +140,33 @@ warning_msg = st.empty()
 if "multiturn_chain" not in st.session_state:
     st.session_state["multiturn_chain"] = create_chain(model_name=selected_model)
 
+
 # 만약에 사용자 입력이 들어오면...
 if user_input:
     chain = st.session_state["multiturn_chain"]
     if chain is not None:
-        try:
-            response = chain.stream(
-                # 질문 입력
-                {"question": user_input},
-                # 세션 ID 기준으로 대화를 기록합니다.
-                config={"configurable": {"session_id": session_id}},
-            )
+        response = chain.stream(
+            # 질문 입력
+            {"question": user_input},
+            # 세션 ID 기준으로 대화를 기록합니다.
+            config={"configurable": {"session_id": session_id}},
+        )
 
-            # 사용자의 입력
-            st.chat_message("user").write(user_input)
+        # 사용자의 입력
+        st.chat_message("user").write(user_input)
 
-            with st.chat_message("assistant"):
-                # 빈 공간(컨테이너)을 만들어서, 여기에 토큰을 스트리밍 출력한다.
-                container = st.empty()
+        with st.chat_message("assistant"):
+            # 빈 공간(컨테이너)을 만들어서, 여기에 토큰을 스트리밍 출력한다.
+            container = st.empty()
 
-                ai_answer = ""
-                for token in response:
-                    ai_answer += token
-                    container.markdown(ai_answer)
+            ai_answer = ""
+            for token in response:
+                ai_answer += token
+                container.markdown(ai_answer)
 
-                # 대화기록을 저장한다.
-                add_message("user", user_input)
-                add_message("assistant", ai_answer)
-        except AttributeError as e:
-            st.error(f"체인 실행 중 오류가 발생했습니다: {str(e)}")
-        except Exception as e:
-            st.error(f"알 수 없는 오류가 발생했습니다: {str(e)}")
+            # 대화기록을 저장한다.
+            add_message("user", user_input)
+            add_message("assistant", ai_answer)
     else:
         # 경고 메시지 출력
         warning_msg.error("대화 체인이 생성되지 않았습니다.")
