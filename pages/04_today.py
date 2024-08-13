@@ -15,6 +15,10 @@ today = datetime.date.today()
 from dotenv import load_dotenv
 import os
 
+
+# 이후에 변수를 사용하여 체인을 생성합니다.
+chain = create_chain(model_name=selected_model)
+
 # API KEY 정보로드
 #load_dotenv()
 
