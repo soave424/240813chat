@@ -72,6 +72,36 @@ if st.button("기념일 확인"):
         st.error(f"체인 실행 중 오류가 발생했습니다: {str(e)}")
     except Exception as e:
         st.error(f"알 수 없는 오류가 발생했습니다: {str(e)}")
+# 함수 정의 위치를 호출보다 앞에 위치시킵니다.
+def create_chain(model_name="gpt-4o"):
+    # 체인을 생성하는 로직
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "당신은 Question-Answering 챗봇입니다. 주어진 질문에 대한 답변을 제공해주세요.",
+            ),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "#Question:\n{question}"),
+        ]
+    )
+
+    llm = ChatOpenAI(model_name=model_name, openai_api_key=st.session_state.api_key)
+
+    chain = prompt | llm | StrOutputParser()
+
+    chain_with_history = RunnableWithMessageHistory(
+        chain,
+        get_session_history,
+        input_messages_key="question",
+        history_messages_key="chat_history",
+    )
+    return chain_with_history
+
+
+# 이후에 변수를 사용하여 체인을 생성합니다.
+chain = create_chain(model_name=selected_model)
+
 
 # 이전 대화를 출력
 def print_messages():
@@ -164,3 +194,4 @@ if user_input:
     else:
         # 경고 메시지 출력
         warning_msg.error("대화 체인이 생성되지 않았습니다.")
+
