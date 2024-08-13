@@ -10,7 +10,9 @@ from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
+import datetime
 
+today = datetime.date.today()
 from dotenv import load_dotenv
 import os
 
