@@ -6,6 +6,10 @@ from langchain_teddynote.prompts import load_prompt
 from dotenv import load_dotenv
 import glob
 import settings
+import os
+import openai
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # API KEY 정보로드
 #load_dotenv()
