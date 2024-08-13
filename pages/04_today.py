@@ -8,7 +8,6 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 import datetime
 
@@ -30,7 +29,7 @@ if not os.path.exists(".cache/files"):
 if not os.path.exists(".cache/embeddings"):
     os.mkdir(".cache/embeddings")
 
-st.title("대화내용을 기억하는 챗봇 💬")
+st.title("특별한 오늘😃")
 
 # 처음 1번만 실행하기 위한 코드
 if "messages" not in st.session_state:
@@ -61,12 +60,17 @@ with st.sidebar:
 
         # GPT-4 모델을 사용하여 답변을 생성합니다.
         chain = st.session_state.get("multiturn_chain")
-        if not chain:
+        if chain is None:
             chain = create_chain(model_name=selected_model)
             st.session_state["multiturn_chain"] = chain
 
-        response = chain.run({"question": question, "configurable": {"session_id": session_id}})
-        st.write(f"📅 {date_str}: {response}")
+        try:
+            response = chain.run({"question": question, "configurable": {"session_id": session_id}})
+            st.write(f"📅 {date_str}: {response}")
+        except AttributeError as e:
+            st.error(f"체인 실행 중 오류가 발생했습니다: {str(e)}")
+        except Exception as e:
+            st.error(f"알 수 없는 오류가 발생했습니다: {str(e)}")
 
 # 이전 대화를 출력
 def print_messages():
@@ -101,7 +105,7 @@ def create_chain(model_name="gpt-4o"):
     )
 
     # llm 생성
-    llm = ChatOpenAI(model_name="gpt-4o", openai_api_key = st.session_state.api_key)
+    llm = ChatOpenAI(model_name=model_name, openai_api_key=st.session_state.get("api_key", ""))
 
     # 일반 Chain 생성
     chain = prompt | llm | StrOutputParser()
@@ -113,7 +117,6 @@ def create_chain(model_name="gpt-4o"):
         history_messages_key="chat_history",  # 기록 메시지의 키
     )
     return chain_with_history
-
 
 # 초기화 버튼이 눌리면...
 if clear_btn:
@@ -135,28 +138,33 @@ if "multiturn_chain" not in st.session_state:
 if user_input:
     chain = st.session_state["multiturn_chain"]
     if chain is not None:
-        response = chain.stream(
-            # 질문 입력
-            {"question": user_input},
-            # 세션 ID 기준으로 대화를 기록합니다.
-            config={"configurable": {"session_id": session_id}},
-        )
+        try:
+            response = chain.stream(
+                # 질문 입력
+                {"question": user_input},
+                # 세션 ID 기준으로 대화를 기록합니다.
+                config={"configurable": {"session_id": session_id}},
+            )
 
-        # 사용자의 입력
-        st.chat_message("user").write(user_input)
+            # 사용자의 입력
+            st.chat_message("user").write(user_input)
 
-        with st.chat_message("assistant"):
-            # 빈 공간(컨테이너)을 만들어서, 여기에 토큰을 스트리밍 출력한다.
-            container = st.empty()
+            with st.chat_message("assistant"):
+                # 빈 공간(컨테이너)을 만들어서, 여기에 토큰을 스트리밍 출력한다.
+                container = st.empty()
 
-            ai_answer = ""
-            for token in response:
-                ai_answer += token
-                container.markdown(ai_answer)
+                ai_answer = ""
+                for token in response:
+                    ai_answer += token
+                    container.markdown(ai_answer)
 
-            # 대화기록을 저장한다.
-            add_message("user", user_input)
-            add_message("assistant", ai_answer)
+                # 대화기록을 저장한다.
+                add_message("user", user_input)
+                add_message("assistant", ai_answer)
+        except AttributeError as e:
+            st.error(f"체인 실행 중 오류가 발생했습니다: {str(e)}")
+        except Exception as e:
+            st.error(f"알 수 없는 오류가 발생했습니다: {str(e)}")
     else:
         # 경고 메시지 출력
         warning_msg.error("대화 체인이 생성되지 않았습니다.")
