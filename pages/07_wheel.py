@@ -22,6 +22,6 @@ st.markdown("""
     }
     </style>
     <div>
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGbSWf-Dvr0WOjJUyQ7LsTN_ZzbECRSPV-gQ&s" class="rotate" alt="Rotating Arrow">
+        <img src="https://img.icons8.com/color/480/1FB141/icons8-new-logo.png" class="rotate" alt="Rotating Arrow">
     </div>
 """, unsafe_allow_html=True)
