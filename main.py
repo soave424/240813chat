@@ -15,7 +15,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 #load_dotenv()
 
 # python -m streamlit run main.py
-st.title("📝석리송 전용 GPT(테디노트 이경록 대표님 코드 기반)")
+st.title("📝GPT와 함께 대화해요")
 
 config = settings.load_config()
 if "api_key" in config:
