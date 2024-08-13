@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 import os
 
 # API KEY 정보로드
-#load_dotenv()
+# load_dotenv()
 
 # 캐시 디렉토리 생성
 if not os.path.exists(".cache"):
@@ -40,7 +40,6 @@ if "messages" not in st.session_state:
 if "store" not in st.session_state:
     st.session_state["store"] = {}
 
-
 # 사이드바 생성
 with st.sidebar:
     # 초기화 버튼 생성
@@ -52,17 +51,31 @@ with st.sidebar:
     # 세션 ID 를 지정하는 메뉴
     session_id = st.text_input("세션 ID를 입력하세요.", "abc123")
 
+    # 날짜 선택 메뉴
+    selected_date = st.date_input("날짜를 선택하세요", today)
+
+    # GPT에 선택한 날짜가 어떤 날인지 물어보기
+    if st.button("날짜 확인"):
+        date_str = selected_date.strftime("%Y-%m-%d")
+        question = f"{date_str}는 어떤 특별한 날인가요?"
+
+        # GPT-4 모델을 사용하여 답변을 생성합니다.
+        chain = st.session_state.get("multiturn_chain")
+        if not chain:
+            chain = create_chain(model_name=selected_model)
+            st.session_state["multiturn_chain"] = chain
+
+        response = chain.run({"question": question, "configurable": {"session_id": session_id}})
+        st.write(f"📅 {date_str}: {response}")
 
 # 이전 대화를 출력
 def print_messages():
     for chat_message in st.session_state["messages"]:
         st.chat_message(chat_message.role).write(chat_message.content)
 
-
 # 새로운 메시지를 추가
 def add_message(role, message):
     st.session_state["messages"].append(ChatMessage(role=role, content=message))
-
 
 # 세션 ID를 기반으로 세션 기록을 가져오는 함수
 def get_session_history(session_ids):
@@ -70,7 +83,6 @@ def get_session_history(session_ids):
         # 새로운 ChatMessageHistory 객체를 생성하여 store에 저장
         st.session_state["store"][session_ids] = ChatMessageHistory()
     return st.session_state["store"][session_ids]  # 해당 세션 ID에 대한 세션 기록 반환
-
 
 # 체인 생성
 def create_chain(model_name="gpt-4o"):
@@ -119,7 +131,6 @@ warning_msg = st.empty()
 if "multiturn_chain" not in st.session_state:
     st.session_state["multiturn_chain"] = create_chain(model_name=selected_model)
 
-
 # 만약에 사용자 입력이 들어오면...
 if user_input:
     chain = st.session_state["multiturn_chain"]
@@ -147,5 +158,5 @@ if user_input:
             add_message("user", user_input)
             add_message("assistant", ai_answer)
     else:
-        # 이미지를 업로드 하라는 경고 메시지 출력
-        warning_msg.error("이미지를 업로드 해주세요.")
+        # 경고 메시지 출력
+        warning_msg.error("대화 체인이 생성되지 않았습니다.")
