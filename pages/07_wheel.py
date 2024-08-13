@@ -20,6 +20,6 @@ st.markdown("""
     }
     </style>
     <div>
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Green_Arrow_Up.svg/1024px-Green_Arrow_Up.svg.png" class="rotate" alt="Rotating Arrow">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGbSWf-Dvr0WOjJUyQ7LsTN_ZzbECRSPV-gQ&s" class="rotate" alt="Rotating Arrow">
     </div>
 """, unsafe_allow_html=True)
