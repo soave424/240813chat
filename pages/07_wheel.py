@@ -12,6 +12,8 @@ st.markdown("""
         width: 150px;
         height: 150px;
         animation: spin 4s linear infinite;
+        transform-origin: 50% 100%; /* 가운데 아래를 기준으로 회전 */
+
     }
 
     @keyframes spin {
